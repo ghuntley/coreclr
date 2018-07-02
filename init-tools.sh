@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -xv
 
 __scriptpath=$(cd "$(dirname "$0")"; pwd -P)
 __init_tools_log="$__scriptpath/init-tools.log"
@@ -134,7 +135,12 @@ if [ ! -e "$__DOTNET_PATH" ]; then
             cp $DotNetBootstrapCliTarPath $__DOTNET_PATH/dotnet.tar
         fi
         cd "$__DOTNET_PATH"
-        tar -xf "$__DOTNET_PATH/dotnet.tar"
+        tar -zxf "$__DOTNET_PATH/dotnet.tar"
+
+	find -type f -name dotnet -exec patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" {} \;
+
+        find -type f -name dotnet -exec	patchelf --set-rpath "${rpath}" {} \;
+        find -type f -name "*.so" -exec patchelf --set-rpath "${rpath}" {} \;
     }
     execute_with_retry install_dotnet_cli >> "$__init_tools_log" 2>&1
 
